@@ -4,11 +4,16 @@ namespace Tii\CsvStateParser;
 
 use Tii\CsvStateParser\Exceptions\InvalidStateException;
 
+/**
+ * @template TResult
+ */
 abstract class CsvStateParser
 {
     protected string $state = 'start';
 
     private int $skipLines = 0;
+
+    private bool $done = false;
 
     public function __construct(
         protected string $separator = ';',
@@ -17,6 +22,8 @@ abstract class CsvStateParser
     ) {}
 
     /**
+     * @return TResult
+     *
      * @throws InvalidStateException
      */
     public function parse(string $filename): mixed
@@ -24,7 +31,6 @@ abstract class CsvStateParser
         foreach ($this->rows($filename) as $row) {
 
             $stateMethod = 'state'.ucfirst($this->state);
-            var_dump($stateMethod);
 
             if (! method_exists($this, $stateMethod)) {
                 throw new InvalidStateException("Method {$stateMethod} does not exist, but current state is {$this->state}.");
@@ -37,19 +43,32 @@ abstract class CsvStateParser
         return $this->result();
     }
 
-    abstract public function result(): mixed;
+    /**
+     * @return TResult
+     */
+    abstract protected function result(): mixed;
 
-    abstract protected function stateStart(array $row);
+    abstract protected function stateStart(array $row): void;
 
     /**
-     * @return \Generator<array>
+     * @return \Generator<array<int, string>>
      */
     protected function rows(string $filename): \Generator
     {
         $file = fopen($filename, 'r');
 
         while (! feof($file)) {
+            if ($this->done) {
+                break;
+            }
+
             $row = fgetcsv($file, null, $this->separator, $this->enclosure, $this->escape);
+
+            $row = array_map($this->mapValue(...), $row);
+
+            if ($row === false) {
+                continue;
+            }
 
             if ($this->skipLines > 0) {
                 $this->skipLines--;
@@ -63,14 +82,28 @@ abstract class CsvStateParser
         fclose($file);
     }
 
+    protected function mapValue(string $value): string
+    {
+        return $value;
+    }
+
     protected function skip(int $count): static
     {
         $this->skipLines = $count;
+
+        return $this;
     }
 
-    protected function state(string|\StringBackedEnum $nextState): static
+    protected function done(): static
     {
-        if ($nextState instanceof \StringBackedEnum) {
+        $this->done = true;
+
+        return $this;
+    }
+
+    protected function state($nextState): static
+    {
+        if ($nextState instanceof \BackedEnum) {
             $nextState = $nextState->value;
         }
 
