@@ -1,0 +1,33 @@
+{
+  "name": "tii/csv-state-parser",
+  "description": "Parses CSV files with a simple finite-state machine.",
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Tii\\CsvStateParser\\": "src/",
+      "Tii\\CsvStateParser\\Tests\\": "tests/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Tii",
+      "email": "mail@tii.one"
+    }
+  ],
+  "minimum-stability": "stable",
+  "require": {
+    "php": "^8.2"
+  },
+  "require-dev": {
+    "laravel/pint": "^1.17",
+    "pestphp/pest": "^2.35",
+    "mockery/mockery": "^1.6",
+    "spatie/ray": "^1.41"
+  },
+  "config": {
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
+  }
+}
