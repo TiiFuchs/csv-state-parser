@@ -115,10 +115,11 @@ class SumParser extends \Tii\CsvStateParser\CsvStateParser
 You can use your parser by instantiating it, and calling the `parse(string $filename)` method. \
 If you need to adjust the separator, enclosure and escape char you can pass those to the constructor.
 
-⚠️ **Beware!** In contrast to fgetcsv this package uses ';' as the default separator character for CSV files.
+⚠️ **Beware!** In contrast to PHPs fgetcsv function this package uses ';' as the default separator character for CSV
+files.
 
 ```php
-$parser = new SumParser(',');
+$parser = new SumParser(separator: ',');
 $list = $parser->parse('filename.csv');
 ```
 
