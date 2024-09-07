@@ -8,6 +8,8 @@ abstract class CsvStateParser
 {
     protected string $state = 'start';
 
+    private int $skipLines = 0;
+
     public function __construct(
         protected string $separator = ';',
         protected string $enclosure = '"',
@@ -47,14 +49,37 @@ abstract class CsvStateParser
         $file = fopen($filename, 'r');
 
         while (! feof($file)) {
-            yield fgetcsv($file, null, $this->separator, $this->enclosure, $this->escape);
+            $row = fgetcsv($file, null, $this->separator, $this->enclosure, $this->escape);
+
+            if ($this->skipLines > 0) {
+                $this->skipLines--;
+
+                continue;
+            }
+
+            yield $row;
         }
 
         fclose($file);
     }
 
-    protected function state(string $nextState): static
+    protected function skip(int $count): static
     {
+        $this->skipLines = $count;
+    }
+
+    protected function state(string|\StringBackedEnum $nextState): static
+    {
+        if ($nextState instanceof \StringBackedEnum) {
+            $nextState = $nextState->value;
+        }
+
+        $nextState = (string) $nextState;
+
+        if (empty($nextState)) {
+            throw new InvalidStateException('Passed next state is not a valid type.');
+        }
+
         $this->state = $nextState;
 
         return $this;
